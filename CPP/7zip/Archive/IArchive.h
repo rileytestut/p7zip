@@ -579,16 +579,16 @@ BSTR AllocBstrFromAscii(const char *s) throw();
 
 extern "C"
 {
-  typedef HRESULT (WINAPI *Func_CreateObject)(const GUID *clsID, const GUID *iid, void **outObject);
+  typedef LONG (*Func_CreateObject)(const GUID *clsID, const GUID *iid, void **outObject);
 
-  typedef UInt32 (WINAPI *Func_IsArc)(const Byte *p, size_t size);
-  typedef HRESULT (WINAPI *Func_GetIsArc)(UInt32 formatIndex, Func_IsArc *isArc);
+  typedef UInt32 ( *Func_IsArc)(const Byte *p, size_t size);
+  typedef HRESULT ( *Func_GetIsArc)(UInt32 formatIndex, Func_IsArc *isArc);
 
-  typedef HRESULT (WINAPI *Func_GetNumberOfFormats)(UInt32 *numFormats);
-  typedef HRESULT (WINAPI *Func_GetHandlerProperty)(PROPID propID, PROPVARIANT *value);
-  typedef HRESULT (WINAPI *Func_GetHandlerProperty2)(UInt32 index, PROPID propID, PROPVARIANT *value);
+  typedef HRESULT ( *Func_GetNumberOfFormats)(UInt32 *numFormats);
+  typedef HRESULT ( *Func_GetHandlerProperty)(PROPID propID, PROPVARIANT *value);
+  typedef HRESULT ( *Func_GetHandlerProperty2)(UInt32 index, PROPID propID, PROPVARIANT *value);
 
-  typedef HRESULT (WINAPI *Func_SetCaseSensitive)(Int32 caseSensitive);
+  typedef HRESULT ( *Func_SetCaseSensitive)(Int32 caseSensitive);
   typedef HRESULT (WINAPI *Func_SetLargePageMode)();
 
   typedef IOutArchive * (*Func_CreateOutArchive)();

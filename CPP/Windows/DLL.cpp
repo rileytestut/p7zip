@@ -4,6 +4,7 @@
 
 #ifdef __APPLE_CC__
 #include <mach-o/dyld.h>
+#include <dlfcn.h>  // dlopen ...
 #elif ENV_BEOS
 #include <kernel/image.h>
 #include <Path.h>
@@ -34,7 +35,7 @@ TRACEN((printf("CLibrary::Free(this=%p,%p)\n",(void *)this,(void *)_module)))
   if (_module == 0)
     return true;
 
-#ifdef __APPLE_CC__
+#ifdef __APPLE_CC__ALT
   int ret = NSUnLinkModule ((NSModule)_module, 0);
 #elif ENV_BEOS
   int ret = unload_add_on((image_id)_module);
@@ -52,7 +53,8 @@ static FARPROC local_GetProcAddress(HMODULE module,LPCSTR lpProcName)
   void *ptr = 0;
   TRACEN((printf("local_GetProcAddress(%p,%s)\n",(void *)module,lpProcName)))
   if (module) {
-#ifdef __APPLE_CC__
+      //RST
+#ifdef __APPLE_CC__ALT
     char name[MAX_PATHNAME_LEN];
     snprintf(name,sizeof(name),"_%s",lpProcName);
     name[sizeof(name)-1] = 0;
@@ -107,14 +109,17 @@ bool CLibrary::Load(LPCTSTR lpLibFileName)
   NSObjectFileImage image;
   NSObjectFileImageReturnCode nsret;
 
-  nsret = NSCreateObjectFileImageFromFile (name, &image);
-  if (nsret == NSObjectFileImageSuccess) {
-     TRACEN((printf("NSCreateObjectFileImageFromFile(%s) : OK\n",name)))
-     handler = (HMODULE)NSLinkModule(image,name,NSLINKMODULE_OPTION_RETURN_ON_ERROR
-           | NSLINKMODULE_OPTION_PRIVATE | NSLINKMODULE_OPTION_BINDNOW);
-  } else {
-     TRACEN((printf("NSCreateObjectFileImageFromFile(%s) : ERROR\n",name)))
-  }
+    //RST
+    handler = dlopen(name, RTLD_NOW);
+    printf("Function: %p", handler);
+//  nsret = NSCreateObjectFileImageFromFile (name, &image);
+//  if (nsret == NSObjectFileImageSuccess) {
+//     TRACEN((printf("NSCreateObjectFileImageFromFile(%s) : OK\n",name)))
+//     handler = (HMODULE)NSLinkModule(image,name,NSLINKMODULE_OPTION_RETURN_ON_ERROR
+//           | NSLINKMODULE_OPTION_PRIVATE | NSLINKMODULE_OPTION_BINDNOW);
+//  } else {
+//     TRACEN((printf("NSCreateObjectFileImageFromFile(%s) : ERROR\n",name)))
+//  }
 #elif ENV_BEOS
   // normalize path (remove things like "./", "..", etc..), otherwise it won't work
   BPath p(name, NULL, true);
@@ -161,7 +166,7 @@ TRACEN((printf("load_add_on(%s)=%d\n",p.Path(),(int)image)))
     if (fctTest) fctTest();
 
   } else {
-#ifdef __APPLE_CC__
+#ifdef __APPLE_CC__ALT
     NSLinkEditErrors c;
     int num_err;
     const char *file,*err;

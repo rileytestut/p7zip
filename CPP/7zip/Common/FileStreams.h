@@ -25,6 +25,9 @@ typedef UINT_PTR My_UINT_PTR;
 typedef UINT My_UINT_PTR;
 #endif
 
+//RST
+#define CFSTR const char *
+
 struct IInFileStream_Callback
 {
   virtual HRESULT InFileStream_On_Error(My_UINT_PTR val, DWORD error) = 0;

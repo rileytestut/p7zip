@@ -109,6 +109,8 @@ static Byte *Base64ToBin(Byte *dest, const char *src)
   }
 }
 
+#include "LzfseDecoder.h"
+
 
 namespace NArchive {
 namespace NDmg {
@@ -121,6 +123,7 @@ enum
   METHOD_ADC    = 0x80000004,
   METHOD_ZLIB   = 0x80000005,
   METHOD_BZIP2  = 0x80000006,
+  METHOD_LZFSE  = 0x80000007, //RST
   METHOD_COMMENT = 0x7FFFFFFE, // is used to comment "+beg" and "+end" in extra field.
   METHOD_END    = 0xFFFFFFFF
 };
@@ -247,6 +250,8 @@ void CMethods::GetString(AString &res) const
       case METHOD_ADC:    s = "ADC";   break;
       case METHOD_ZLIB:   s = "ZLIB";  break;
       case METHOD_BZIP2:  s = "BZip2"; break;
+            //RST
+        case METHOD_LZFSE:  s = "LZFSE"; break;
       default: ConvertUInt32ToString(type, buf); s = buf;
     }
     res.Add_Space_if_NotEmpty();
@@ -1109,6 +1114,9 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems,
 
   NCompress::NZlib::CDecoder *zlibCoderSpec = new NCompress::NZlib::CDecoder();
   CMyComPtr<ICompressCoder> zlibCoder = zlibCoderSpec;
+    
+    NCompress::NLzfse::CDecoder *lzfseCoderSpec = new NCompress::NLzfse::CDecoder();
+    CMyComPtr<ICompressCoder> lzfseCoder = lzfseCoderSpec;
 
   CAdcDecoder *adcCoderSpec = new CAdcDecoder();
   CMyComPtr<ICompressCoder> adcCoder = adcCoderSpec;
@@ -1240,6 +1248,12 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems,
                   opRes = NExtract::NOperationResult::kDataError;
               break;
             }
+                  
+              case METHOD_LZFSE:
+              {
+                res = lzfseCoder->Code(inStream, outStream, &block.PackSize, &block.UnpSize, progress);
+                break;
+              }
             
             default:
               opRes = NExtract::NOperationResult::kUnsupportedMethod;
@@ -1255,7 +1269,7 @@ STDMETHODIMP CHandler::Extract(const UInt32 *indices, UInt32 numItems,
           }
           
           unpPos += block.UnpSize;
-          
+            
           if (!outStreamSpec->IsFinishedOK())
           {
             if (realMethod && opRes == NExtract::NOperationResult::kOK)
@@ -1307,6 +1321,9 @@ class CInStream:
 
   NCompress::NZlib::CDecoder *zlibCoderSpec;
   CMyComPtr<ICompressCoder> zlibCoder;
+    
+    NCompress::NLzfse::CDecoder *lzfseCoderSpec;
+    CMyComPtr<ICompressCoder> lzfseCoder;
 
   CAdcDecoder *adcCoderSpec;
   CMyComPtr<ICompressCoder> adcCoder;
@@ -1472,6 +1489,15 @@ STDMETHODIMP CInStream::Read(void *data, UInt32 size, UInt32 *processedSize)
             if (res == S_OK && bzip2CoderSpec->GetInputProcessedSize() != block.PackSize)
               res = S_FALSE;
             break;
+                
+            case METHOD_LZFSE:
+              if (!lzfseCoder)
+              {
+                lzfseCoderSpec = new NCompress::NLzfse::CDecoder();
+                lzfseCoder = lzfseCoderSpec;
+              }
+              res = lzfseCoder->Code(inStream, outStream, &block.PackSize, &block.UnpSize, NULL);
+              break;
             
           default:
             return E_FAIL;
@@ -1559,6 +1585,8 @@ STDMETHODIMP CHandler::GetStream(UInt32 index, ISequentialInStream **stream)
       case METHOD_ADC:
       case METHOD_ZLIB:
       case METHOD_BZIP2:
+            //RST
+        case METHOD_LZFSE:
       case METHOD_END:
         break;
       default:
@@ -1575,12 +1603,26 @@ STDMETHODIMP CHandler::GetStream(UInt32 index, ISequentialInStream **stream)
   COM_TRY_END
 }
 
+extern "C"
+{
+void RSTFunction()
+{
+    printf("Hello World!\n");
+}
+}
+
+API_FUNC_static_IsArc IsArc_XXX(const Byte *p, size_t size)
+{
+    return k_IsArc_Res_YES;
+}
+}
+
 REGISTER_ARC_I(
   "Dmg", "dmg", 0, 0xE4,
   k_Signature,
   0,
   NArcInfoFlags::kBackwardOpen |
   NArcInfoFlags::kUseGlobalOffset,
-  NULL)
+               IsArc_XXX)
 
 }}

@@ -56,6 +56,15 @@ public:
     if (pos == _limitPos)
       FlushWithCheck();
   }
+    
+    //RST
+    void PutBytes(const Byte *bytes, int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            PutByte(*(bytes + i));
+        }
+    }
   
   Byte GetByte(UInt32 distance) const
   {

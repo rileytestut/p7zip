@@ -263,7 +263,10 @@ static bool GetCurDir(UString &path)
 #ifdef _UNICODE
     path = GetUnicodeString(begin);
 #else
-    path = begin;
+      //RST
+      // path = begin;
+      path = GetUnicodeString(begin);
+    //strncpy(path, begin, strlen(begin));
 #endif
     return true;
   }

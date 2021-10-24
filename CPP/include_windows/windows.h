@@ -18,6 +18,7 @@
 /* BEGIN #include <windef.h> */
 
 #include "Common/MyWindows.h" // FIXED
+#include <stdbool.h>
 
 #ifndef CONST
 #define CONST const
@@ -36,7 +37,7 @@
 #define WINAPI 
 
 #undef BOOL
-typedef int BOOL;
+typedef bool BOOL;
 
 
 #define CREATE_NEW	  1
@@ -178,7 +179,7 @@ DWORD WINAPI GetTickCount(VOID);
 #define CP_UTF8  65001
 
 /* #include <unknwn.h> */
-#include <basetyps.h>
+#include "basetyps.h"
 
 #ifdef __cplusplus
 extern "C" const IID IID_ISequentialStream;

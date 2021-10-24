@@ -18,10 +18,10 @@ static const char *kIllegalCharMessage = "Illegal character in input stream";
 
 // extern int g_CodePage;
 
-#ifdef _UNICODE
+//#ifdef _UNICODE
 #define NEED_NAME_WINDOWS_TO_UNIX
 #include "myPrivate.h"
-#endif
+//#endif
 
 CStdInStream g_StdIn(stdin);
 
